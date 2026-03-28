@@ -1,8 +1,8 @@
 # Demo-Viewer
 
 Unity-based 3D replay viewer for EchoVR / nEVR telemetry data. Plays back
-`.echoreplay` and `.nevrcap` capture files, with planned support for live
-match streaming via the nEVR platform.
+`.echoreplay`, `.nevrcap`, and `.tape` capture files, with planned support
+for live match streaming via the nEVR platform.
 
 ## Build & Run
 
@@ -31,10 +31,16 @@ Demo Viewer/              Unity project root
       ReplayLoader/
         Replay.cs         Loads and drives .echoreplay playback
       ButterReplays/      .echoreplay format (v1-v3 decompressors)
-      NevrCap/            .nevrcap protobuf-based format
+      NevrCap/            .nevrcap protobuf-based format (v1)
         NevrCapReader.cs           Reads .nevrcap container
         NevrCapFrameConverter.cs   Converts protobuf frames to viewer model
         Telemetry.cs               Generated C# from telemetry/v1/telemetry.proto
+      Tape/               .tape protobuf-based format (v2, from echotools/tape)
+        TapeReader.cs              Reads .tape v2 container (Envelope stream)
+        TapeFrameConverter.cs      Converts v2 frames to viewer model
+        Capture.cs                 Generated C# from telemetry/v2/capture.proto
+        EchoArena.cs               Generated C# from telemetry/v2/echo_arena.proto
+        SpatialTypes.cs            Generated C# from spatial/v1/types.proto
       EchoVRAPI/          Data model classes (Frame, Player, Team, Disc, etc.)
       Network/            VelNet multiplayer (shared viewing sessions)
       SimpleCameraController.cs   Desktop camera rig
@@ -58,8 +64,11 @@ libs/                     Native libraries (ncurses, tinfo for signal handling)
 - **Frame pipeline:** Replay files are loaded into `EchoVRAPI.Frame` objects.
   The viewer interpolates between frames and drives player transforms, disc
   position, and game-clock state each Unity update.
-- **Replay formats:** `.echoreplay` (JSON + zstd, handled by ButterReplays)
-  and `.nevrcap` (protobuf + container, handled by NevrCap/).
+- **Replay formats:** `.echoreplay` (JSON + zstd, handled by ButterReplays),
+  `.nevrcap` (protobuf v1 + zstd, handled by NevrCap/), and `.tape`
+  (protobuf v2 + zstd, handled by Tape/). The `.tape` format is produced
+  by `echotools/tape` (tapedeck CLI) and uses the `telemetry.v2.Envelope`
+  wire format with `spatial.v1` float32 types.
 - **Protobuf integration:** `Telemetry.cs` and related types are generated
   from `telemetry/v1/*.proto` definitions. The runtime DLL lives in
   `Assets/Plugins/Google.Protobuf.dll`.
@@ -74,8 +83,8 @@ libs/                     Native libraries (ncurses, tinfo for signal handling)
   members, `camelCase` for local variables and private fields.
 - One MonoBehaviour per file; filename matches class name.
 - Singletons use `public static T instance` (assigned in `Awake`).
-- Protobuf-generated code lives under `NevrCap/` and must not be
-  hand-edited; regenerate from `.proto` source instead.
+- Protobuf-generated code lives under `NevrCap/` and `Tape/` and must not
+  be hand-edited; regenerate from `.proto` source instead.
 - Indent with 4 spaces for C#; tabs appear in some legacy files.
 
 ## Dependencies
@@ -83,8 +92,8 @@ libs/                     Native libraries (ncurses, tinfo for signal handling)
 | Dependency | Purpose |
 |---|---|
 | Unity 6000.3.x | Editor and runtime |
-| Google.Protobuf | Protobuf deserialization for .nevrcap |
-| ZstdSharp | Zstandard decompression for .echoreplay |
+| Google.Protobuf | Protobuf deserialization for .nevrcap and .tape |
+| ZstdSharp | Zstandard decompression for .echoreplay, .nevrcap, .tape |
 | Newtonsoft.Json (via UPM) | JSON parsing for .echoreplay frames |
 | Animation Rigging | IK for player bone rendering |
 | Cinemachine | Camera system |

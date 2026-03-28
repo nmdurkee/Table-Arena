@@ -25,7 +25,7 @@ public class MenuScript : MonoBehaviour
         loadingScreen.SetActive(false);
         for (int i = 0; i < args.Length; i++) {
             Debug.Log ("ARG " + i + ": " + args [i]);
-            if(args[i].Contains(".json") || args[i].Contains(".echoreplay") || args[i].Contains(".butter") || args[i].Contains(".nevrcap")){
+            if(args[i].Contains(".json") || args[i].Contains(".echoreplay") || args[i].Contains(".butter") || args[i].Contains(".nevrcap") || args[i].Contains(".tape")){
                 fileInput.text = args[i];
                 StartButtonClick();
                 break;

@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using ButterReplays;
 using EchoVRAPI;
 using NevrCap;
+using Tape;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
 
@@ -208,6 +209,121 @@ public class Replay : MonoBehaviour
 			catch (Exception ex)
 			{
 				Debug.LogError($"[NevrCap] Error reading nevrcap file: {ex.Message}\nStack trace: {ex.StackTrace}");
+			}
+
+			fileReadProgress = 1;
+
+			Game readGame = new Game
+			{
+				nFrames = frames.Count,
+				filename = filename,
+				frames = frames
+			};
+
+			lock (gameLock)
+			{
+				game = readGame;
+			}
+		}
+		// tape v2 (Zstd-compressed protobuf envelope)
+		else if (filename.EndsWith(".tape"))
+		{
+			fileReader.Close();
+
+			fileReadProgress = 0;
+			List<Frame> frames = new List<Frame>();
+
+			try
+			{
+				using (var reader = new TapeReader(filename))
+				{
+					var header = reader.ReadHeader();
+					if (header != null)
+					{
+						Debug.Log($"[Tape] Loading tape v2: {header.CaptureId}, format v{header.FormatVersion}");
+					}
+					else
+					{
+						Debug.LogWarning("[Tape] No header found in tape file");
+					}
+
+					// Compute base time from header
+					DateTime baseTime = header?.CreatedAt != null
+						? header.CreatedAt.ToDateTime()
+						: DateTime.MinValue;
+
+					// Accumulate roster across frames for player info lookup
+					var roster = new Dictionary<int, Nevr.Telemetry.V2.PlayerInfo>();
+					if (header?.EchoArena?.InitialRoster != null)
+					{
+						foreach (var pi in header.EchoArena.InitialRoster)
+						{
+							roster[pi.Slot] = pi;
+						}
+					}
+
+					Nevr.Telemetry.V2.Frame tapeFrame;
+					int framesRead = 0;
+					int framesConverted = 0;
+					int framesRejected = 0;
+
+					Debug.Log("[Tape] Starting frame reading...");
+
+					while ((tapeFrame = reader.ReadFrame()) != null)
+					{
+						if (threadLoadingId != loadingThreadId) return;
+
+						framesRead++;
+
+						// Track roster changes from PlayerJoined events
+						if (tapeFrame.EchoArena?.Events != null)
+						{
+							foreach (var evt in tapeFrame.EchoArena.Events)
+							{
+								if (evt.EventCase == Nevr.Telemetry.V2.EchoEvent.EventOneofCase.PlayerJoined)
+								{
+									var pj = evt.PlayerJoined;
+									roster[pj.Slot] = new Nevr.Telemetry.V2.PlayerInfo
+									{
+										Slot = pj.Slot,
+										AccountNumber = pj.AccountNumber,
+										DisplayName = pj.DisplayName,
+										Role = pj.Role,
+									};
+								}
+							}
+						}
+
+						Frame frame = TapeFrameConverter.Convert(tapeFrame, header, baseTime, roster);
+						if (frame != null)
+						{
+							frames.Add(frame);
+							framesConverted++;
+						}
+						else
+						{
+							framesRejected++;
+						}
+
+						if (framesRead % 1000 == 0)
+						{
+							Debug.Log($"[Tape] Progress: Read {framesRead} frames, converted {framesConverted}, rejected {framesRejected}");
+						}
+
+						fileReadProgress = (framesRead % 1000) / 1000f;
+					}
+
+					if (reader.Footer != null)
+					{
+						Debug.Log($"[Tape] Footer: {reader.Footer.FrameCount} frames, {reader.Footer.DurationMs}ms duration");
+					}
+
+					Debug.Log($"[Tape] Finished: {framesRead} read, {framesConverted} converted, {framesRejected} rejected");
+				}
+			}
+			catch (Exception ex)
+			{
+				Debug.LogError($"[Tape] Error reading tape file: {ex.Message}\nStack trace: {ex.StackTrace}");
 			}
 
 			fileReadProgress = 1;

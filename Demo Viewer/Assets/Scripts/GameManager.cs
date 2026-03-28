@@ -125,7 +125,7 @@ public class GameManager : MonoBehaviour
 		// only set the file the first time the scene is loaded. This is a pretty dumb way to do this.
 		if (Time.timeAsDouble < 5)
 		{
-			foreach (string arg in args.Where(arg => arg.Contains(".echoreplay") || arg.Contains(".butter") || arg.Contains(".nevrcap")))
+			foreach (string arg in args.Where(arg => arg.Contains(".echoreplay") || arg.Contains(".butter") || arg.Contains(".nevrcap") || arg.Contains(".tape")))
 			{
 				PlayerPrefs.SetString("fileDirector", arg);
 				Debug.Log($"[GameManager] Command-line argument detected: {arg}");
@@ -166,6 +166,12 @@ public class GameManager : MonoBehaviour
 		
 		FileAssociations.SetAssociation(
 			".butter",
+			"EchoVR.Replay.Viewer",
+			"Echo VR Replay File",
+			Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Replay Viewer.exe"));
+
+		FileAssociations.SetAssociation(
+			".tape",
 			"EchoVR.Replay.Viewer",
 			"Echo VR Replay File",
 			Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Replay Viewer.exe"));
@@ -351,7 +357,7 @@ public class GameManager : MonoBehaviour
 	private void PrintHelp()
 	{
 		string helpText = @"
-EchoVR Demo Viewer - Replay file viewer for .echoreplay, .butter, and .nevrcap files
+EchoVR Demo Viewer - Replay file viewer for .echoreplay, .butter, .nevrcap, and .tape files
 
 USAGE:
   Demo Viewer.exe [OPTIONS] [REPLAY_FILE]
@@ -363,12 +369,14 @@ OPTIONS:
 SUPPORTED FILE FORMATS:
   .echoreplay        JSON-based replay format (uncompressed or gzip)
   .butter            Binary compressed replay format
-  .nevrcap           Zstd-compressed protobuf capture format
+  .nevrcap           Zstd-compressed protobuf capture format (v1)
+  .tape              Zstd-compressed protobuf capture format (v2)
 
 EXAMPLES:
   Demo Viewer.exe myreplay.echoreplay
   Demo Viewer.exe -useVR myreplay.butter
   Demo Viewer.exe recording.nevrcap
+  Demo Viewer.exe recording.tape
 
 DEBUGGING:
   To see console output on Windows, run with:

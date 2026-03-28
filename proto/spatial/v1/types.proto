@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package spatial.v1;
+
+option csharp_namespace = "Nevr.Spatial.V1";
+
+message Vec3 {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+}
+
+message Quat {
+  float x = 1;
+  float y = 2;
+  float z = 3;
+  float w = 4;
+}
+
+message Pose {
+  Vec3 position = 1;
+  Quat orientation = 2;
+}
