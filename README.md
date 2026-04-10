@@ -29,6 +29,33 @@ A Unity-based replay viewer for [EchoVR](https://en.wikipedia.org/wiki/Echo_VR) 
 - [just](https://github.com/casey/just#installation) (command runner)
 - [git-lfs](https://git-lfs.com/)
 
+**Linux (Arch):**
+
+```bash
+pacman -S just git-lfs
+# buf: https://buf.build/docs/installation
+buf_version=1.50.0 && \
+  curl -sSL "https://github.com/bufbuild/buf/releases/download/v${buf_version}/buf-Linux-x86_64" -o ~/.local/bin/buf && \
+  chmod +x ~/.local/bin/buf
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+sudo apt install git-lfs
+# just
+curl --proto '=https' --tlsv1.2 -sSf https://just.systems/install.sh | bash -s -- --to ~/.local/bin
+# buf (same as above)
+```
+
+**Windows (winget):**
+
+```powershell
+winget install Casey.Just
+winget install GitHub.GitLFS
+winget install Bufbuild.Buf
+```
+
 ### Clone
 
 ```bash
