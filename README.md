@@ -22,16 +22,72 @@ A Unity-based replay viewer for [EchoVR](https://en.wikipedia.org/wiki/Echo_VR) 
 
 ## Building
 
+### Prerequisites
+
+- [Unity Hub](https://unity.com/download) with Unity **6000.3.x** installed
+- [buf](https://buf.build/docs/installation) (protobuf codegen)
+- [just](https://github.com/casey/just#installation) (command runner)
+- [git-lfs](https://git-lfs.com/)
+
+### Clone
+
 ```bash
-just doctor          # check tool availability
-just proto           # generate C# from .proto
-just build-linux     # or build-windows, build-macos
+git lfs install
+git clone https://github.com/EchoTools/demo-viewer.git
+cd demo-viewer
+```
+
+### Linux
+
+```bash
+# Check prerequisites
+just doctor
+
+# Generate C# from protobuf definitions
+just proto
+
+# Build
+just build-linux
+
+# Output: Build/Linux/ReplayViewer
+```
+
+Unity must be installed at `~/Unity/Hub/Editor/6000.3.4f1/Editor/Unity`, or set `UNITY_PATH`:
+
+```bash
+UNITY_PATH=/path/to/Unity just build-linux
+```
+
+### Windows
+
+```powershell
+# Check prerequisites
+just doctor
+
+# Generate C# from protobuf definitions
+just proto
+
+# Build
+just build-windows
+
+# Output: Build\Windows\ReplayViewer.exe
+```
+
+Unity must be installed at the default Hub location, or set `UNITY_PATH`:
+
+```powershell
+$env:UNITY_PATH = "C:\Program Files\Unity\Hub\Editor\6000.3.4f1\Editor\Unity.exe"
+just build-windows
+```
+
+### Other Commands
+
+```bash
+just build-macos     # macOS build
 just build-all       # all platforms
 just test            # run Unity tests
 just clean           # remove build artifacts + Unity cache
 ```
-
-Set `UNITY_PATH` if Unity is not at `~/Unity/Hub/Editor/6000.3.4f1/Editor/Unity`.
 
 ## Usage
 
